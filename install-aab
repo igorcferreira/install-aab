@@ -60,9 +60,18 @@ function install_java {
         exit 1
     fi
 
-    brew install --cask java
+    brew install --cask temurin
 
     export JAVA_HOME="$(/usr/libexec/java_home)"
+}
+
+function install_adb {
+    if ! command_exists brew; then
+        echo "Please install adb and try again"
+        exit 1
+    fi
+
+    brew install --cask android-platform-tools
 }
 
 function clean_keystore_config {
@@ -114,8 +123,7 @@ if [[ ! -f "${AAB_FILE}" ]]; then
 fi
 
 if ! command_exists adb; then
-    echo "Please, install adb and try again"
-    exit 1
+    install_adb
 fi
 
 if ! command_exists bundletool; then

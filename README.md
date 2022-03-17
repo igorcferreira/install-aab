@@ -63,12 +63,7 @@ Keystore:
 
 ## Requirements
 
-#### Non-recoverable
-
 - adb
-
-#### Recoverable (if Homebrew is installed)
-
 - Java
 - bundletool
 
