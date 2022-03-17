@@ -1,0 +1,147 @@
+#!/bin/bash
+
+set -e
+
+SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+TEMP_PATH="${SCRIPT_PATH}/.tmp_output.apks"
+AAB_FILE=""
+KEYSTORE_FILE=""
+KEYSTORE_PASSWORD=""
+ALIAS=""
+ALIAS_PASSWORD=""
+
+function print_help {
+    echo "Usage:"
+    echo "install-aab -b /path/to/app.aab"
+    echo ""
+    echo "Parameters:"
+    echo "    --bundle         -b : Path to the AAB file"
+    echo "    --key            -k : Keystore that will be used to sign the exported APK"
+    echo "    --key-password   -kp: Keystore password"
+    echo "    --alias          -a : Key alias"
+    echo "    --alias-password -ap: Alias password (optional)"
+    echo "    --help           -h : Prints this helper message"
+    echo ""
+    echo "Keystore:"
+    echo "    If all the key configuration is passed, the provided keystore will be used to sign the application. Otherwise, debug keystore is used."
+    echo "    If no Alias password is provided, the key password is repeated in the alias."
+}
+
+function print_environment {
+    echo "Environment:"
+    echo "  AAB path  : ${AAB_FILE}"
+    echo "  Java      : ${JAVA_HOME}"
+    echo "  adb       : $(which adb)"
+    echo "  bundletool: $(which bundletool)"
+    echo "  keystore  : ${KEYSTORE_FILE}"
+}
+
+function command_exists {
+  #this should be a very portable way of checking if something is on the path
+  #usage: "if command_exists foo; then echo it exists; fi"
+  type "$1" &> /dev/null
+}
+
+function install_bundletool {
+    if ! command_exists brew; then
+        echo "Please install bundletool and try again"
+        exit 1
+    fi
+
+    brew install bundletool
+}
+
+function install_java {
+    if ! command_exists brew; then
+        echo "Please install Java and try again"
+        exit 1
+    fi
+
+    brew install --cask java
+
+    export JAVA_HOME="$(/usr/libexec/java_home)"
+}
+
+function clean_keystore_config {
+    KEYSTORE_FILE=""
+    KEYSTORE_PASSWORD=""
+    ALIAS=""
+    ALIAS_PASSWORD=""
+}
+
+function validate_keyconfig {
+    if [ -z "${KEYSTORE_FILE}" ]; then
+        clean_keystore_config
+    fi
+
+    if [ -z "${KEYSTORE_PASSWORD}" ]; then
+        clean_keystore_config
+    fi
+
+    if [ -z "${ALIAS}" ]; then
+        clean_keystore_config
+    fi
+
+    if [ -z "${ALIAS_PASSWORD}" ]; then
+        ALIAS_PASSWORD="${KEYSTORE_PASSWORD}"
+    fi
+}
+
+while [ -n "$1" ]; do
+    case "$1" in
+        --help | -h) print_help && exit 0 ;;
+        --bundle | -b) AAB_FILE="$2" && shift ;;
+        --key | -k)  KEYSTORE_FILE="$2" && shift ;;
+        --key-password | -kp) KEYSTORE_PASSWORD="$2" && shift ;;
+        --alias | -a) ALIAS="$2" && shift ;;
+        --alias-password | -ap) ALIAS_PASSWORD="$2"  && shift ;;
+    esac
+    shift
+done
+
+if [[ -z "${AAB_FILE}" ]]; then
+    echo "Please inform an aab file"
+    exit 1
+fi
+
+if [[ ! -f "${AAB_FILE}" ]]; then
+    echo "Please inform a valid aab file"
+    exit 1
+fi
+
+if ! command_exists adb; then
+    echo "Please, install adb and try again"
+    exit 1
+fi
+
+if ! command_exists bundletool; then
+    install_bundletool
+fi
+
+if ! command_exists java; then
+    install_java
+fi
+
+validate_keyconfig
+print_environment
+
+echo "Creating APKS"
+if [[ -f "${TEMP_PATH}" ]]; then
+    rm "${TEMP_PATH}"
+fi
+
+KEY_INFO=""
+if [[ ! -z "${KEYSTORE_FILE}" ]]; then
+    KEY_INFO="--ks=${KEYSTORE_FILE} --ks-pass=pass:${KEYSTORE_PASSWORD} --ks-key-alias=${ALIAS} --key-pass=pass:${ALIAS_PASSWORD}"
+else
+    echo "No valid keystore configuration provided. Using debug keystore"
+fi
+
+bundletool "build-apks" "--connected-device" "--overwrite" "--bundle=${AAB_FILE}" "--output=${TEMP_PATH}" $KEY_INFO
+
+echo "Installing APK"
+bundletool "install-apks" "--apks=${TEMP_PATH}"
+
+if [[ -f "${TEMP_PATH}" ]]; then
+    rm "${TEMP_PATH}"
+fi
