@@ -20,6 +20,25 @@ This is a set of processes that allows to install an AAB into a device or emulat
 --alias-password android
 ```
 
+### Full help text
+
+```
+Usage:
+install-aab -b /path/to/app.aab
+
+Parameters:
+    --bundle         -b : Path to the AAB file
+    --key            -k : Keystore that will be used to sign the exported APK
+    --key-password   -kp: Keystore password
+    --alias          -a : Key alias
+    --alias-password -ap: Alias password (optional)
+    --help           -h : Prints this helper message
+
+Keystore:
+    If all the key configuration is passed, the provided keystore will be used to sign the application. Otherwise, debug keystore is used.
+    If no Alias password is provided, the key password is repeated in the alias.
+```
+
 ## Requirements
 
 #### Non-recoverable
