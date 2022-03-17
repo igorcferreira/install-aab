@@ -2,6 +2,15 @@
 
 This is a set of processes that allows to install an AAB into a device or emulator using adb and bundle-tool. If running on a macOS device with Homebrew, this process will attempt to install bundle-tool if it is not already installed.
 
+## Installation
+
+install-aab is available as a Homebrew Formula. To install it:
+
+```sh
+$ brew tap igorcferreira/tap
+$ brew install install-aab
+```
+
 ## Usage
 
 #### Simple usage (debug keystore):
