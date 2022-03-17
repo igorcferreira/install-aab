@@ -9,6 +9,7 @@ KEYSTORE_FILE=""
 KEYSTORE_PASSWORD=""
 ALIAS=""
 ALIAS_PASSWORD=""
+DEVICE_ID=""
 
 function print_help {
     echo "Usage:"
@@ -21,6 +22,7 @@ function print_help {
     echo "    --alias          -a : Key alias"
     echo "    --alias-password -ap: Alias password (optional)"
     echo "    --help           -h : Prints this helper message"
+    echo "    --device-id         : Id of the device where the APK will be installed (optional)"
     echo ""
     echo "Keystore:"
     echo "    If all the key configuration is passed, the provided keystore will be used to sign the application. Otherwise, debug keystore is used."
@@ -34,6 +36,7 @@ function print_environment {
     echo "  adb       : $(which adb)"
     echo "  bundletool: $(which bundletool)"
     echo "  keystore  : ${KEYSTORE_FILE}"
+    echo "  device id : ${DEVICE_ID}"
 }
 
 function command_exists {
@@ -95,6 +98,7 @@ while [ -n "$1" ]; do
         --key-password | -kp) KEYSTORE_PASSWORD="$2" && shift ;;
         --alias | -a) ALIAS="$2" && shift ;;
         --alias-password | -ap) ALIAS_PASSWORD="$2"  && shift ;;
+        --device-id) DEVICE_ID="$2" && shift ;;
     esac
     shift
 done
@@ -137,10 +141,15 @@ else
     echo "No valid keystore configuration provided. Using debug keystore"
 fi
 
-bundletool "build-apks" "--connected-device" "--overwrite" "--bundle=${AAB_FILE}" "--output=${TEMP_PATH}" $KEY_INFO
+DEVICE_INFO=""
+if [[ ! -z "${DEVICE_ID}" ]]; then
+    DEVICE_INFO="--device-id ${DEVICE_ID}"
+fi
+
+bundletool "build-apks" "--connected-device" $DEVICE_INFO "--overwrite" "--bundle=${AAB_FILE}" "--output=${TEMP_PATH}" $KEY_INFO
 
 echo "Installing APK"
-bundletool "install-apks" "--apks=${TEMP_PATH}"
+bundletool "install-apks" "--apks=${TEMP_PATH}" $DEVICE_INFO
 
 if [[ -f "${TEMP_PATH}" ]]; then
     rm "${TEMP_PATH}"
