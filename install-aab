@@ -154,7 +154,7 @@ if [[ ! -z "${DEVICE_ID}" ]]; then
     DEVICE_INFO="--device-id ${DEVICE_ID}"
 fi
 
-bundletool "build-apks" "--connected-device" $DEVICE_INFO "--overwrite" "--bundle=${AAB_FILE}" "--output=${TEMP_PATH}" $KEY_INFO
+bundletool "build-apks --local-testing" "--connected-device" $DEVICE_INFO "--overwrite" "--bundle=${AAB_FILE}" "--output=${TEMP_PATH}" $KEY_INFO
 
 echo "Installing APK"
 bundletool "install-apks" "--apks=${TEMP_PATH}" $DEVICE_INFO
