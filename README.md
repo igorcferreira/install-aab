@@ -71,4 +71,4 @@ Keystore:
 
 ----
 
-This script is inspired by [JonnyBurger/](https://github.com/JonnyBurger/install-aab)install-aab](https://github.com/JonnyBurger/install-aab). This version was created to be able to run without NVM/Node in the machine and allow signing the generated APK.
+This script is inspired by [JonnyBurger/install-aab](https://github.com/JonnyBurger/install-aab). This version was created to be able to run without NVM/Node in the machine and allow signing the generated APK.
